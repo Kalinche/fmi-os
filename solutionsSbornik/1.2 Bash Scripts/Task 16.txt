@@ -1,0 +1,48 @@
+#! /bin/bash
+
+if [ $# -ne 1 ]; then
+	echo "Usage '$0'" >&2
+	exit 1
+fi
+
+if [ "$(whoami)" != "root" ]; then
+	echo "Not root"
+	exit 2
+fi
+
+export RSS=0;
+export NAME="";
+MAX_RSS = 0;
+MAX_PID = 0;
+while read LINE; do
+	if [ "$(echo "${LINE}" | cut -d " " -f 1 )" = "${NAME}" ]; then
+		FIELD = $(echo "${LINE}" | cut -d ' ' -f 4)
+		RSS="$(echo "${RSS} + ${FIELD}" | bc)"
+		if [ ${MAX_RSS} -lt ${FIELD} ]; then
+			MAX_RSS = ${FIELD};
+			MAX_PID = $(echo "${LINE}" | cut -d ' ' -f 3);
+		fi
+	else
+		if [ "${NAME}" != "" ] && [ "${RSS}" -ne 0 ]; then
+			echo "USER: ${NAME} RSS: ${RSS}"
+		fi
+			
+		if [ ${RSS} -gt $1 ]; then
+			#kill ${MAX_PID}
+			echo "killing: ${NAME} ${MAX_PID}"
+		fi
+
+		MAX_RSS=0
+		MAX_PID=0
+
+		RSS="$(echo "${LINE}" | cut -d ' ' -f 4)"
+		NAME="$(echo "${LINE}" | cut -d ' ' -f 1)"
+	fi
+done < <(ps -e -o user,uid,pid,rss | tail -n +2 | sort |tr -s ' ')
+echo "USER: ${NAME} RSS: ${RSS}"
+
+if [ ${RSS} -gt $1 ]; then
+	#kill ${MAX_PID}
+	echo "killing: ${NAME} ${MAX_PID}"
+fi
+

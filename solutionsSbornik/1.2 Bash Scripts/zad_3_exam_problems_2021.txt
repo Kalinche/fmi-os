@@ -1,0 +1,41 @@
+  1 #! /bin/bash
+  2
+  3 if [ $# -ne 2 ]; then
+  4     echo "Usage $0 <num> <num>" >&2
+  5     exit 1
+  6 fi
+  7
+  8 RE='^[0-9]+$'
+  9
+ 10 if ! [[ "$1" =~ $RE ]]; then
+ 11     echo "The first parameter should be a number $1" >&2
+ 12     exit 2
+ 13 fi
+ 14
+ 15 if ! [[ "$2" =~ $RE ]]; then
+ 16     echo "The second parameter should be a number" >&2
+ 17     exit 3
+ 18 fi
+ 19
+ 20 if [ "$1" -gt "$2" ]; then
+ 21     echo "The first parameter should be bigger than the first" >&2
+ 22     exit 4
+ 23 fi
+ 24
+ 25 mkdir a b c
+ 26
+ 27 find ./ -type f | xargs wc -l | head -n -1 | while read LINE; do
+ 28
+ 29     LINES=$(echo "${LINE}" | cut -d " " -f 1)
+ 30     FILE=$(echo "${LINE}" | cut -d " " -f 2)
+ 31
+ 32     if [ ${LINES} -lt $1 ]; then
+ 33         mv ./"${FILE}" a/
+ 34     elif [ ${LINES} -lt $2 ]; then
+ 35         mv ./"${FILE}" b/
+ 36     else
+ 37         mv ./"${FILE}" c/
+ 38     fi
+ 39
+ 40 done
+

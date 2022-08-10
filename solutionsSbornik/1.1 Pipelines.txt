@@ -5,15 +5,23 @@ zad_2
 find / -user $(whoami) 2> /dev/null | wc -l
 
 zad_3
-find -type f -size 0c | rm -i
+find . -type f -size 0 | xargs rm -i
 
-find ~ -type f -printf '%p %s\n' | sort -rn -k 2 | head -n 5
+find ~ -type f -printf '%s\t%p\n' | sort -nr | head -n 5 | cut -f 2 | xargs rm -i
 
 zad_4
 awk -F ':' ' $5 ~ /([[:alpha:]]*,){4}И/ ' /etc/passwd | awk -F ',' ' $1 ~ /[[:alpha:]]+ \<[[:alpha:]]+а\>/ ' | cut -d ':' -f 1 | cut -c 3,4 | sort | uniq -c | sort -nr | head -n 1
 
+zad_5
+find ./ -maxdepth 1 -type f -printf '%i %n %p\n' | sort -u -k1,1 | head -n 5
+
+zad_6
+find . -maxdepth 1-mindepth 1  -type | xargs chmod 755
+
 zad_7
-find /home/students/s62533 -type f -printf %p %i %T@ %nn | awk ' >1 ' | sort     -rn -k 3 | head -n1 | cut -f 2 -d ' '
+find /home/students/s62533 -type f -printf %p %i %T@ %nn | awk ' >1 ' | sort -rn -k 3 | head -n1 | cut -f 2 -d ' '
+
+find ~/pesho -type f -printf “%T@ %n %i %p\n” | awk ' $2>1 ' | sort -n | tail -n 1 | cut -d ' ' -f 3
 
 zad_8
 cat /etc/passwd | awk -v "UID=$(cat /etc/passwd | sort -k 3 -n -t ':' | head -n 201 | tail -n1 | cut -f 4 -d ':')" -F ':' ' $4==UID' | cut -d ':' -f 5,6 | tr ':' ',' | cut -d ',' -f 1,6| tr ',' ' '

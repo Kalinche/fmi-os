@@ -1,0 +1,26 @@
+#! /bin/bash
+
+if [ $# -gt 2 || $# -lt 1]; then
+	echo "Usage: '$0' <dir> [num]" >&2
+	exit 1
+fi
+
+if [ ! -d "$1" ]; then
+	echo "Not a dir" >&2
+	exit 2
+fi
+
+if [ $# -eq  1 ]; then
+	find -L "$1" -type l
+	exit
+fi
+
+#  Solution 1
+find "$1" -printf "%n %p\n" | awk -v num="$2" '($1 >= num) {print $2}'
+
+# Solutioin 2
+# find "$1" -printf "%n %p\n" | while rerad line; do
+#	if [ $(echo "$(line)" | cunt -d ' ' -f 1) -ge "$2" ]; then
+#		echo "$(line)" | cunt -d ' ' -f 2
+#	fi
+# done
