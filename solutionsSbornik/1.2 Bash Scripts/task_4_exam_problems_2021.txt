@@ -1,0 +1,27 @@
+ 1 #! /bin/bash
+  2
+  3 if [ $# -ne 2 ]; then
+  4     echo "Usage $0 <file> <file>" >&2
+  5     exit 1
+  6 fi
+  7
+  8 if [ ! -f "$1" ]; then
+  9     echo "The first parameter should be a file" >&2
+ 10     exit 2
+ 11 fi
+ 12
+ 13 if [ ! -f "$2" ]; then
+ 14     echo "The second parameter should be a file" >&2
+ 15     exit 3
+ 16 fi
+ 17
+ 18 LINESFIRST=$(cat "$1" | egrep "$1" | wc -l)
+ 19 LINESSECOND=$(cat "$2" | egrep "$2" | wc -l)
+ 20
+ 21 if [ ${LINESFIRST} -gt ${LINESSECOND} ]; then
+ 22     BIGGER="$1"
+ 23 else
+ 24     BIGGER="$2"
+ 25 fi
+ 26
+ 27 cut -d " " -f 4- "${BIGGER}" | sort > "${BIGGER}".songs
