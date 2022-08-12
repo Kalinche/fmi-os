@@ -1,38 +1,39 @@
- #! /bin/bash
-  2
-  3 SRC="$1"
-  4 DST="$2"
-  5 STR="$3"
-  6
-  7 if [ $# -ne 3 ]; then
-  8     echo "Usage $0 <src_dir> <dist_dir> <string>" >&2
-  9     exit 1
- 10 fi
- 11
- 12 if [ ! -d "${SRC}" ]; then
- 13     echo "The first parameter should be a directory" >&2
- 14     exit 2
- 15 fi
- 16
- 17 if [ ! -d "${DST}" ]; then
- 18     echo "The second parameter should be a directory" >&2
- 19     exit 3
- 20 fi
- 21
- 22 if [ $(find  /"${DST}" -mindepth 1 | wc -l) -ne 0 ]; then
- 23     echo "The second parameter should be an empty directory" >&2
- 24     exit 4
- 25 fi
- 26
- 27 if [ -z "${STR}" ]; then
- 28     echo "The third parameter should be a nonempty string" >&2
- 29     exit 5
- 30 fi
- 31
- 32 [ "$(whoami)" != "root" ] || exit
- 33
- 34 #create needed directories under /dst
- 35 find "${SRC}" -mindepth 2 -type f -printf "%P %f\n" | grep "^.*\s.*${STR}.*$" | cut -d "     " -f 1 | rev | cut -d "/" -f 2- | rev | xargs -I {} mkdir -p /"${DST}"/{}
- 36
- 37 #mv the needed filed in the new directories
- 38 find "${SRC}" -mindepth 1 -type f -printf "%P %f\n" | grep "^.*\s.*${STR}.*$" | cut -d "     " -f 1 | xargs -I {} touch /"${DST}"/{}
+ 
+#! /bin/bash
+
+SRC="$1"
+DST="$2"
+STR="$3"
+
+if [ $# -ne 3 ]; then
+    echo "Usage $0 <src_dir> <dist_dir> <string>" >&2
+    exit 1
+fi
+
+if [ ! -d "${SRC}" ]; then
+    echo "The first parameter should be a directory" >&2
+    exit 2
+fi
+
+if [ ! -d "${DST}" ]; then
+    echo "The second parameter should be a directory" >&2
+    exit 3
+fi
+
+if [ $(find  /"${DST}" -mindepth 1 | wc -l) -ne 0 ]; then
+    echo "The second parameter should be an empty directory" >&2
+    exit 4
+fi
+
+if [ -z "${STR}" ]; then
+    echo "The third parameter should be a nonempty string" >&2
+    exit 5
+fi
+
+[ "$(whoami)" != "root" ] || exit
+
+#create needed directories under /dst
+find "${SRC}" -mindepth 2 -type f -printf "%P %f\n" | grep "^.*\s.*${STR}.*$" | cut -d " " -f 1 | rev | cut -d "/" -f 2- | rev | xargs -I {} mkdir -p /"${DST}"/{}
+
+#mv the needed filed in the new directories
+find "${SRC}" -mindepth 1 -type f -printf "%P %f\n" | grep "^.*\s.*${STR}.*$" | cut -d " " -f 1 | xargs -I {} touch /"${DST}"/{}
