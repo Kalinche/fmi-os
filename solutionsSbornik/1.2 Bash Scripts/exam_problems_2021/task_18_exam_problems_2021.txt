@@ -27,17 +27,15 @@ while read LINE; do
             echo "USER: ${NAME} RSS: ${RSS}"
         fi
 
-        if [ ${RSS} -gt "$1" ]; then
+        if [ ${RSS} -gt $1 ]; then
             #kill ${MAXPID}
             echo "killing: ${NAME} ${MAXPID}"
         fi
 
         RSS="$(echo "${LINE}" | cut -d " " -f 4 )"
         NAME="$(echo "${LINE}" | cut -d " " -f 1 )"
-        MAXPID=0
-        MAXRSS=0
     fi
 
 done < <(ps -e -o user,uid,pid,rss | tail -n +2 | sort | tr -s " ")
 
-echo "USER: ${NAME} RSS: ${RSS}
+echo "USER: ${NAME} RSS: ${RSS}"
