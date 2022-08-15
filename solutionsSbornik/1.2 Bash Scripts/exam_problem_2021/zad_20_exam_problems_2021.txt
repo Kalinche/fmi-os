@@ -1,0 +1,27 @@
+ #! bin/bash
+
+ if [ $# -ne 3 ]; then
+     echo "Usage: $0 <file> <string1> <string2>"
+     exit 1
+ fi
+
+ if [ ! -f "$1" ]; then
+    echo "The first parameter should be a regular file" >&2
+    exit 2
+ fi
+
+
+ if [ -z "$2" -o -z "$3" ]; then
+     echo "The string cannot be empty" .&2
+     exit 3
+ fi
+
+VALUES1=$(egrep "^$2=" $1 | cut -d "=" -f 2 | sed 's/ /\n/g' | sort)
+VALUES2=$(egrep "^$3=" $1 | cut -d "=" -f 2 | sed 's/ /\n/g' | sort)
+
+if [ ! -z "${VALUES2}" ]; then
+    UNIQUE_VALUES=$(comm -13 <(echo "${VALUES1}") <(echo "${VALUES2}") | tr "\n" " ")
+
+    LINE_NUMBER=$(egrep -n "^$3" $1 | cut -d ":" -f 1)
+    sed -Ei "${LINE_NUMBER}"'s/^([^=]+=).*$/\1'"${UNIQUE_VALUES}"'/' "$1"
+fi
