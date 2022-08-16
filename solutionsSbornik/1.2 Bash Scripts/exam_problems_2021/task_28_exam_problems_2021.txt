@@ -1,0 +1,38 @@
+#! /bin/bash
+
+if [ $# -ne 0 ]; then
+    echo "Usage: $0" >&2
+    exit 1
+fi
+
+#[ "$(whoami)" = "root" ] || exit
+
+USERS=""
+
+while read LINE; do
+    DIRECTORY="$(echo "${LINE}" | cut -d ":" -f 3)"
+    USER_NAME="$(echo "${LINE}" | cut -d ":" -f 1)"
+    USER_ID="$(echo "${LINE}" | cut -d ":" -f 2)"
+    OWNER="$(stat -c "%U" "${DIRECTORY}" 2> /dev/null)"
+    CANNOT_WRITE="$(find "${DIRECTORY}" -maxdepth 0 \! -perm -u+x 2> /dev/null | wc -l)"
+
+    if [ ! -d "${DIRECTORY}" ] || \
+        [ "${OWNER}" != "${USER_NAME}" -a "${OWNER}" != "${USER_ID}" ] || \
+         [ ${CANNOT_WRITE} -eq 1 ]; then
+        USERS="$(echo "${USERS} ${USER_NAME}")"
+    fi
+
+done < <(cut -d ":" -f 1,3,6 /etc/passwd)
+
+USERS="$(echo "${USERS}" | sed 's/ /\n/g' | tail -n +2)"
+
+RSS_ROOT=$(ps -u root -o rss | awk 'BEGIN { SUM=0 } { SUM+=$1 } END { print SUM }')
+
+while read LINE; do
+    RSS=$(ps -u "${LINE}" -o rss | awk 'BEGIN { SUM=0 } { SUM+=$1 } END { print SUM }')
+
+    if [ ${RSS} -gt ${RSS_ROOT} ]; then
+        #ps -u "${LINE}" -o pid | xargs kill
+    fi
+
+done < <(echo "${USERS}")
