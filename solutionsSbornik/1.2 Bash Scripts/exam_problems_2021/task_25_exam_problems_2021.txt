@@ -1,0 +1,49 @@
+#! /bin/bash
+
+if [ $# -ne 0 ]; then
+    echo "Usage: $0" >&2
+    exit 1
+fi
+
+#[ "$(whoami)" == "root" ] || exit
+
+CURRENT_USER=""
+COUNT=0
+RSS=""
+MAXRSS=0
+MAXPID=0
+
+while read LINE; do
+    USER_IN_LINE=$(echo "${LINE}" | cut -d " " -f 1)
+    RSS_IN_LINE=$(echo "${LINE}" | cut -d " " -f 2)
+
+    if [ "${CURRENT_USER}" = "${USER_IN_LINE}" ]; then
+
+        if [ ${MAXRSS} -lt ${RSS_IN_LINE} ]; then
+            MAXRSS=${RSS_IN_LINE}
+            MAXPID=$(echo "${LINE}" | cut -d " " -f 3)
+        fi
+
+        COUNT=$(echo "${COUNT} + 1" | bc)
+        RSS=$(echo "${RSS_IN_LINE} + ${RSS}" | bc )
+
+    else
+
+        if [ "${CURRENT_USER}" != "" ]; then
+            echo "${CURRENT_USER} ${COUNT} ${RSS}"
+            DOUBLE_AVERAGE=$(echo "${RSS} * 2 / ${COUNT}" | bc)
+
+            if [ ${MAXRSS} -gt ${DOUBLE_AVERAGE} ]; then
+                #kill ${MAXPID}
+                echo "Killing ${MAXPID}"
+            fi
+        fi
+
+        CURRENT_USER=${USER_IN_LINE}
+        COUNT=1
+        RSS=${RSS_IN_LINE}
+        MAXRSS=0
+        MAXPID=0
+
+    fi
+done < <(ps -e -o user,rss,pid | tr -s " " | sort)

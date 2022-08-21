@@ -1,0 +1,48 @@
+#! /bin/bash
+
+if [ $# -ne 2 ]; then
+    echo "Usage: $0 <dir> <string>" >&2
+    exit 1
+fi
+
+if [ ! -d "$1" ]; then
+    echo "The first parameter should be a valid directory" >&2
+    exit 2
+fi
+
+if [ -z "$2" ]; then
+    echo "The second parameter should be a valid architecture" >&2
+    exit 3
+fi
+
+MAX_VERSION=0
+MAX_MAJOR=0
+MAX_MINOR=0
+MAX_LINE=""
+
+while read LINE; do
+    CURRENT_VERSION=$(echo "${LINE}" | cut -d "-" -f 2 | cut -d "." -f 1)
+    CURRENT_MAJOR=$(echo "${LINE}" | cut -d "-" -f 2 | cut -d "." -f 2)
+    CURRENT_MINOR=$(echo "${LINE}" | cut -d "-" -f 2 | cut -d "." -f 3)
+
+    if [ ${MAX_VERSION} -lt ${CURRENT_VERSION} ]; then
+        MAX_VERSION=${CURRENT_VERSION}
+        MAX_MAJOR=${CURRENT_MAJOR}
+        MAX_MINOR=${CURRENT_MINOR}
+        MAX_LINE=${LINE}
+    elif [ ${MAX_VERSION} -eq ${CURRENT_VERSION} ] && \
+        [ ${MAX_MAJOR} -lt "${CURRENT_MAJOR}" ]; then
+        MAX_MAJOR=${CURRENT_MAJOR}
+        MAX_MINOR=${CURRENT_MINOR}
+        MAX_LINE=${LINE}
+    elif [ ${MAX_VERSION} -eq ${CURRENT_VERSION} ] && \
+        [ ${MAX_MAJOR} -eq ${CURRENT_MAJOR} ] && \
+        [ ${MAX_MINOR} -lt ${CURRENT_MINOR} ]; then
+        MAX_MINOR=${CURRENT_MINOR}
+        MAX_LINE=${LINE}
+    fi
+
+done < <(find "$1" -maxdepth 1 -type f -printf "%f\n" | egrep "^vmlinuz-[[:digit:]]+.[[:digit:]]+.[[:digit:]]+-$2")
+
+echo "${MAX_LINE}"
+s

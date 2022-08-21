@@ -1,0 +1,14 @@
+#! /bin/bash
+
+if [ $# -ne 0 ]; then
+    echo "Usage: $0"  >&2
+    exit 1
+fi
+
+#[ "$(whoami)" == "root" ] || exit
+
+# Print users with noo homedirs
+awk -F ":" ' $6=="/nonexistent" { print $1 } ' /etc/passwd
+
+# Print users with unwritable homedir
+cut -d ":" -f 6 /etc/passwd | xargs -I {} find {} -maxdepth 0 \! -perm -u+x 2>/dev/null | rev | cut -d "/" -f 1 | rev

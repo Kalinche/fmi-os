@@ -1,0 +1,38 @@
+
+  1 #! /bin/bash
+  2
+  3 if [ $# -lt 1 ] || [ $# -gt 2 ]; then
+  4     echo "Usage $0 <dir> [file]" >&2
+  5     exit 1
+  6 fi
+  7
+  8 if [ ! -d "$1" ]; then
+  9     echo "The first parameter should be a directory" >&2
+ 10     exit 2
+ 11 fi
+ 12
+ 13 TEMP_FILE="$(mktemp)"
+ 14
+ 15 #find "$1" -type l | while read LINE; do
+ 16 #   if [ -e "${LINE}" ]; then
+ 17 #       stat -c "%N" "${LINE}" >> "${TEMP_FILE}"
+ 18 #   fi
+ 19 #done
+ 20
+ 21 find "$1" -type l -exec test -e {} \; -print | xargs stat -c "%N" >> "${TEMP_FILE}"
+ 22 echo "Broken links $(find -L "$1" -type l | wc  -l)" >> "${TEMP_FILE}"
+ 23
+ 24 if [ $# -eq 2 ]; then
+ 25
+ 26     if [ ! -f "$2" ]; then
+ 27         touch "$2"
+ 28     fi
+ 29
+ 30     mv "${TEMP_FILE}" "$2"
+ 31
+ 32 else
+ 33
+ 34     cat "${TEMP_FILE}"
+ 35     rm "${TEMP_FILE}"
+ 36
+ 37 fi

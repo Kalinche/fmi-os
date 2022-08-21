@@ -10,13 +10,13 @@ find . -type f -size 0 | xargs rm -i
 find ~ -type f -printf '%s\t%p\n' | sort -nr | head -n 5 | cut -f 2 | xargs rm -i
 
 zad_4
-awk -F ':' ' $5 ~ /([[:alpha:]]*,){4}И/ ' /etc/passwd | awk -F ',' ' $1 ~ /[[:alpha:]]+ \<[[:alpha:]]+а\>/ ' | cut -d ':' -f 1 | cut -c 3,4 | sort | uniq -c | sort -nr | head -n 1
+awk -F ':' ' $5 ~ /([[:alpha:]]*,){4}И/ ' /etc/passwd | awk -F ',' ' $1 ~ /[[:alpha:]]+ \<[[:alpha:]]+а\>/ ' | cut -d ':' -f 1 | cut -c 3,4 | sort | uniq -c | sort -nr | head -n 1 | cut -d " " -f 3
 
 zad_5
-find ./ -maxdepth 1 -type f -printf '%i %n %p\n' | sort -u -k1,1 | head -n 5
+find ./ -maxdepth 1 -type f -printf '%n %i %p\n' | sort -u -t " " -k 1,2 | sort -nr -t " " -k 1,1 | head -n 5
 
 zad_6
-find . -maxdepth 1-mindepth 1  -type | xargs chmod 755
+find ~ -maxdepth 1 -mindepth 1 -type d | xargs chmod 755
 
 zad_7
 find /home/students/s62533 -type f -printf %p %i %T@ %nn | awk ' >1 ' | sort -rn -k 3 | head -n1 | cut -f 2 -d ' '

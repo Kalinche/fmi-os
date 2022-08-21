@@ -1,0 +1,26 @@
+#! /bin/bash
+if [ $# -ne 1 ]; then
+    echo "Usage: $0 <user>" >&2
+    exit 1
+fi
+
+#[ "$(whoami)" = "root" ] || exit
+
+if [ -z "$1" ]; then
+    echo "The parameter cannot be empty string" >&2
+    exit 2
+fi
+
+if ! id "$1" &>/dev/null; then
+    echo "The string should be an existing user name" >&2
+    exit 3
+fi
+
+echo "Printing users with more processes than $1:"
+ps -e -o user --no-headers | sort | uniq -c | tr -s " " | awk -v LINES="$(ps -u "$1" | wc -l)" -F " " ' $1>LINES { print $2 } '
+
+AVERAGE=$(ps -e -o cputimes | tr -s " " | awk -F " " ' BEGIN { SUM=0 } { SUM+=$1 } END { print SUM/NR }')
+
+echo "Average cpu time in seconds per process: ${AVERAGE}"
+
+ps -u "$1" -o cputimes,pid --no-headers | tr -s " " | awk -F " " -v DOUBLE_AVG="${AVERAGE}*2" ' $1>DOUBLE_AVG { print $2 } ' | xargs -I {} kill {} 2>/dev/null

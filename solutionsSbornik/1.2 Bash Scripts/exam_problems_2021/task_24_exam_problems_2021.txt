@@ -1,0 +1,38 @@
+#! /bin/bash
+
+SRC="$1"
+DST="$2"
+STR="$3"
+
+if [ $# -ne 3 ]; then
+    echo "Usage $0 <src_dir> <dist_dir> <string>" >&2
+    exit 1
+fi
+
+if [ ! -d "${SRC}" ]; then
+    echo "The first parameter should be a directory" >&2
+    exit 2
+fi
+
+if [ ! -d "${DST}" ]; then
+    echo "The second parameter should be a directory" >&2
+    exit 3
+fi
+
+if [ $(find  /"${DST}" -mindepth 1 | wc -l) -ne 0 ]; then
+    echo "The second parameter should be an empty directory" >&2
+    exit 4
+fi
+
+if [ -z "${STR}" ]; then
+    echo "The third parameter should be a nonempty string" >&2
+    exit 5
+fi
+
+[ "$(whoami)" != "root" ] || exit
+
+#create needed directories under /dst
+find "${SRC}" -mindepth 2 -type f -printf "%P %f\n" | grep "^.*\s.*${STR}.*$" | cut -d " " -f 1 | rev | cut -d "/" -f 2- | rev | xargs -I {} mkdir -p /"${DST}"/{}
+
+#mv the needed filed in the new directories
+find "${SRC}" -mindepth 1 -type f -printf "%P %f\n" | grep "^.*\s.*${STR}.*$" | cut -d " " -f 1 | xargs -I {} mv /"${SRC}"/{} /"${DST}"/{}
