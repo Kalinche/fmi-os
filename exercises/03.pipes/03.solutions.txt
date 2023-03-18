@@ -131,13 +131,13 @@ s62625@astero:~$ cut -d ':' -f 7 /etc/passwd | grep -v -c '/bin/bash'
 --- 03-а-5002 ---
 Изведете само имената на хората с второ име по-дълго от 6 (>6) символа според /etc/passwd
 
-s62625@astero:~$ cut -d ':' -f 5 /etc/passwd | cut -d ',' -f 1 | egrep '^[А-Я][а-я]+[[:space:]][А-Я][а-я]{6,}'
+s62625@astero:~$ cut -d ':' -f 5 /etc/passwd | cut -d ',' -f 1 | egrep '^[А-Я][а-я]+[[:space:]][А-Я][а-я]{6,}$'
 
 
 --- 03-a-5003 ---
 Изведете имената на хората с второ име по-късо от 8 (<=7) символа според /etc/passwd // !(>7) = ?
 
-s62625@astero:~$ cut -d ':' -f 5 /etc/passwd | cut -d ',' -f 1 | egrep -v '^[А-Я][а-я]+[[:space:]][А-Я][а-я]{7,}'
+s62625@astero:~$ cut -d ':' -f 5 /etc/passwd | cut -d ',' -f 1 | egrep -v '^[А-Я][а-я]+[[:space:]][А-Я][а-я]{7,}$'
 
 
 --- 03-a-5004 ---
@@ -185,6 +185,7 @@ s62625@astero:~$ awk '/Beth/{print}' emp.data | awk 'END{print NR}'
 - най-голямото трето поле и редът, който го съдържа
 
 s62625@astero:~$ awk '{print $3, $0}' emp.data | sort -r | awk 'NR==1 { print $0 }'
+s62625@astero:~$ awk 'BEGIN{a=0}BEGIN{b=0}{if ($3>a) {a=$1; b=$0}} END{print b}' asciiLinuxEmp.data
 
 - всеки ред, който има поне едно поле
 
