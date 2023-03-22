@@ -313,6 +313,7 @@ cat file2 | tr "a-z" "A-Z"
 --- 03-b-4002 ---
 Във file3 (inplace) изтрийте всички "1"-ци.
 
+vi + :%s/1//g
 vi + x
 s62625@astero:~/dir5$ cat file3 | sed -e 's/1//'
 
