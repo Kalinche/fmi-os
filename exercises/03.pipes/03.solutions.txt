@@ -403,7 +403,11 @@ s62625@astero:~$ find /usr/include -type f  -name "*.[ch]" | xargs wc -l
 Хистограма наричаме поредица от редове, всеки от които има вида:
 <брой срещания> <какво се среща толкова пъти>
 
+Решение, което хваща и табове и числа като част от думата
 s62625@astero:~$ egrep -o "\<[^ ]+\>" /etc/services | tr "\t" "\n" | sed "/^$/d" | sort | uniq -c | sort -rn | head -n 10
+
+Коректно решение
+egrep -o '[[:alpha:]]+' /etc/services | sort | uniq -c | sort -n -r | head -10
 
 
 --- 03-b-8000 ---
@@ -415,11 +419,15 @@ s62625@astero:~$ egrep -o "\<[^ ]+\>" /etc/services | tr "\t" "\n" | sed "/^$/d"
 
 s62625@astero:~$ cat /srv/fmi-os/exercises/data/mypasswd.txt | egrep "s[[:digit:]]{5,6}:/bin/[[:alpha:]]+$" | cut -f 1 -d ':' | egrep -o "[[:digit:]]+"
 
+s62625@astero:~$ egrep --color "^([^:]+:){5}/home/SI/" data/mypasswd.txt | cut -d ":" -f 1 | cut -c 2-
+
 
 --- 03-b-8500 ---
 За всяка група от /etc/group изпишете "Hello, <група>", като ако това е вашата група, напишете "Hello, <група> - I am here!".
 
 s62625@astero:~$  cut -d ':' -f 1 /etc/group | awk -v group=$(id -Gn $(whoami)) '{if($0 != group) print "Hello, "$0; else print "Hello, "$0" - it is me!"}'
+
+s62625@astero:~$ cut /etc/group -d ":" -f 1 | awk -v group=$(id -gn) '{if($0 != group) print "Hello, "$0; else print "Hello, "$0" - it is me!"}'^C
 
 
 --- 03-b-8600 ---
@@ -430,6 +438,9 @@ Shell Script-овете са файлове, които по конвенция 
 
 Намерете всички .sh файлове в директорията `/usr` и нейните поддиректории, и
 проверете кой е най-често използваният интерпретатор.
+
+s62625@astero:~$ find /usr -type f -name "*.sh" | xargs head -n 1 | egrep --color "^#!" | cut -c 3- | sed 's/^ //' | sort | uniq -c | sort -n -r
+
 
 --- 03-b-8700 ---
 1. Изведете GID-овете на 5-те най-големи групи спрямо броя потребители, за които
@@ -451,7 +462,7 @@ s62625@astero:~$ cut -d ':' -f 4 /etc/passwd | sort | uniq -c | sort -nr | head 
 15мин (по възможност изключете .).  Запишете във eternity името (път) на
 файла и времето (unix time) на последната промяна.
 
-s62625@astero:~$ find ~ -type f -mmin -15 -printf '%p %t\n' 2> /dev/null > ./eternity
+s62625@astero:~$ find ~ -type f -mmin -15 -printf '%p %T@\n' 2> /dev/null > ./eternity
 
 
 --- 03-b-9050 ---
@@ -464,11 +475,14 @@ s62625@astero:~$ cp /srv/fmi-os/exercises/data/population.csv ~
 Използвайки файл population.csv, намерете колко е общото население на света
 през 2008 година. А през 2016?
 
---- 03-b-9052 ---
-Използвайки файл population.csv, намерете коя държава има най-много население през 2016. А коя е с най-малко население?
-(Hint: Погледнете имената на държавите)
+s62625@astero:~$ cat population.csv | egrep --color "(,[[:alpha:]]{3},)2008,[[:digit:]]*$"   rev |  cut -d "," -f 1 | awk '{s+=$1} END {print s}'
 
-s62625@astero:~$ egrep '2008,[0-9]*$' ./population.csv | rev | cut -d ',' -f 1 | rev | awk '{s+=$1} END {print s}'
+
+--- 03-b-9052 ---
+Използвайки файл population.csv, намерете през коя година в България има най-много население.
+
+s62625@astero:~$ egrep --color "^Bulgaria" population.csv | sort -nr -t "," -k 4 | head -1
+
 
 
 --- 03-b-9053 ---
@@ -503,6 +517,8 @@ s62625@astero:~$ tar -xf songs.tar.gz -C ./songs
 
 s62625@astero:~$ find -type f | egrep '.ogg$' | cut -d '-' -f 2 | rev | cut -d '(' -f 2 | rev| sed "s/^ *//g"
 
+s62625@astero:~/songs$ find . -mindepth 1 | cut -d "-" -f 2 | sed 's/^ //g' | cut -d "(" -f 1
+
 
 --- 03-b-9103 ---
 Имената на песните да се направят с малки букви, да се заменят спейсовете с
@@ -510,11 +526,15 @@ s62625@astero:~$ find -type f | egrep '.ogg$' | cut -d '-' -f 2 | rev | cut -d '
 
 s62625@astero:~$ find -type f | egrep '.ogg$' | cut -d '-' -f 2 | rev | cut -d '(' -f 2 | rev| sed "s/^ *//g" | sed "s/ *$//g" | tr [A-Z] [a-z] | tr ' ' '_' | sort
 
+s62625@astero:~/songs$ find . -mindepth 1 | cut -d "-" -f 2 | sed 's/^ //g' | cut -d "(" -f 1| tr '[[:upper:]]' '[[:lower:]]' | tr ' ' '_' | sed 's/_$//g' | sort
+
 
 --- 03-b-9104 ---
 Да се изведат всички албуми, сортирани по година.
 
 s62625@astero:~$ find -type f | egrep '.ogg$' | cut -d '-' -f 2 | sed "s/^ *//g" | cut -d '(' -f 2 | cut -d ')' -f 1 | sort -t ',' -k 2 -n
+
+s62625@astero:~/songs$ find . -mindepth 1 | cut -d "(" -f 2 | cut -d ")" -f 1 | sort -nr -t "," -k "2" | cut -d "," -f 1
 
 
 --- 03-b-9105 ---
@@ -522,6 +542,7 @@ s62625@astero:~$ find -type f | egrep '.ogg$' | cut -d '-' -f 2 | sed "s/^ *//g"
 
 s62625@astero:~$ find -type f | egrep '.ogg$' | cut -d '-' -f 1 | cut -d '/' -f 3 | grep 'Pink Floyd\|Beatles' | sort | uniq -c
 
+find . -mindepth 1 | grep --color '^./Beatles\|^./Pink' | wc -l
 
 s62625@astero:~$ find -type f | egrep '.ogg$' | grep 'Pink Floyd\|Beatles' | cut -d '-' -f 2 | sed "s/^ *//g" | cut -d '(' -f 1 | sed "s/ *$//g"
 
@@ -587,6 +608,8 @@ this\ is"really"not\allowed@example.com
 
 (Разгледайте for цикли в awk)
 
+s62625@astero:~$ awk '{for(i=NF; i>=1; i--) if($i!="e") {printf $i" "}; print ""}' emp.data
+
 --- 03-b-9500 ---
 Копирайте <РЕПО>/exercises/data/ssa-input.txt във вашата home директория.
 Общият вид на файла е:
@@ -629,3 +652,7 @@ x-yyyyyy zz ww
 	- yyyyyy е името на диска
 	- zz е current temperature
 	- ww е max temperature
+	
+	
+s62625@astero:~$ cat ssa-input.txt | tail -n +4 | tr -s " " | sed 's/^ //g' | aw ($1 == "Array") arr=$2; if ($1 == "physicaldrive") pd=$2; if ($1" "$2" "$3 == "rature (C):") ct=$4; if ($1" "$2" "$3 == "Maximum Temperature (C):") {mt=$4; pri"ct" "mt} }'
+
