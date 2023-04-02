@@ -7,7 +7,7 @@ ps -eo cmd --sort etimes | tail -10
 04-a-6000.txt
 Намерете PID и командата на процеса, който заема най-много виртуална памет в системата.
 
-ps -eo pid,cmd --sort vsize | tail -n 1
+ps -eo pid --sort vsz | tail -1
 
 
 04-a-6300.txt
@@ -20,19 +20,20 @@ ps -eo cmd --sort etimes | tail -1
 Намерете колко физическа памет заемат всички процеси на потребителската група root.
 
 s62625@astero:~$ ps -eo group,size | tail -n +1 | tr -s ' ' | awk -F " " '{ if($1 == "root") {s+=$2}} END {print s}'
-
-
+s62625@astero:~$ ps -eo group=,size= | egrep '^root' |  awk '{i+=$2} END{print i}'
 
 04-b-6100.txt
 Изведете имената на потребителите, които имат поне 2 процеса, чиято команда е vim (независимо какви са аргументите й)
 
 s62625@astero:~$ ps -eo user,comm | tail -n +2 | sort | uniq -c | awk '$1 >= 2 && $3 == "vim"{print $2}'
+s62625@astero:~$ ps -eo comm,user | grep "vim" | sort | uniq -c | awk '$1>=2'
 
 
 04-b-6200.txt
 Изведете имената на потребителите, които не са логнати в момента, но имат живи процеси
 
 ps -eo user | tail -n +2 | sort | uniq | egrep -v "^$(who | cut -d " " -f 1)$"
+s62625@astero:~$ ps -eo user= | sort | uniq | grep "^$(who | cut -d " " -f 1)$"
 
 
 04-b-7000.txt
