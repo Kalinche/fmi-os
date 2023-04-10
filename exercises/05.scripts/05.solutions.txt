@@ -29,7 +29,7 @@ https://linuxize.com/post/how-to-create-bash-aliases/
 05-b-2000.txt
 Да се напише shell скрипт, който приканва потребителя да въведе низ (име) и изпечатва "Hello, низ".
   
-  1 #! /bin.bash
+  1 #! /bin/bash
   2
   3 read -p "Please enter your name: " name
   4
@@ -57,7 +57,7 @@ https://linuxize.com/post/how-to-create-bash-aliases/
 
   1 #! /bin/bash
   2
-  3 read -p "Please, exter a valid username: " username
+  3 read -p "Please, enter a valid username: " username
   4
   5 if [ -z "${username}" ]; then
   6     echo "The parameter must have lenght > 0." >&2
@@ -70,6 +70,7 @@ https://linuxize.com/post/how-to-create-bash-aliases/
  13     echo "Invalid username." >&2
  14     exit 2
  15 fi
+ 
 
 05-b-3200.txt
 Да се напише shell скрипт, който приканва потребителя да въведе пълното име на директория и извежда на стандартния изход подходящо съобщение за броя на всички файлове и всички директории в нея.
@@ -83,7 +84,25 @@ https://linuxize.com/post/how-to-create-bash-aliases/
   7     exit 1
   8 fi
   9
- 10 echo "Number of files and dirs : $(find "${dirname}" -type f -or -type d 2>/dev/null | wc     -l)"
+ 10 echo "Number of files and dirs : $(find "${dirname}" -type f -or -type d 2>/dev/null | wc -l)"
+
+
+  1 #! /bin/bash
+  2
+  3 read -p "Please, enter a valid full dir name: " dirName
+  4
+  5 if [ ! -d "${dirName}" ]; then
+  6     echo "Invalid dir name" >&2
+  7     exit 1
+  8 fi
+  9
+ 10 resWithErrors=$(find "${dirName}" -type f -o -type d 2>&1)
+ 11
+ 12 if (echo ${resWithErrors} | grep -q "find: ‘"${dirName}"’: Permission denied$"); then
+ 13     echo "Permission denied for the dir"
+ 14 else
+ 15     echo "Number of files and dirs in the directory: $(find "${dirName}" -type f -o -type d | wc -l)"
+ 16 fi
 
 
 05-b-3300.txt
@@ -91,14 +110,19 @@ https://linuxize.com/post/how-to-create-bash-aliases/
 
   1 #! /bin/bash
   2
-  3 read -p "Please, enter file names, separated by space: " file1 file2 file3
+  3 read file1 file2 file3
   4
   5 if [ ! \( -f "${file1}" -a -f "${file2}" \) ]; then
-  6     echo "The first and the second params are not files." >&2
+  6     echo "The first two file must already exists!" >&2
   7     exit 1
   8 fi
   9
- 10 paste "${file1}" "${file2}" > "${file3}"
+ 10 if [ -z "${file3}" ]; then
+ 11     echo "There should be a destination file" >&2
+ 12     exit 2
+ 13 fi
+ 14
+ 15 paste "${file1}" "${file2}" > "${file3}"
 
 
 05-b-3400.txt
@@ -152,28 +176,36 @@ int main(int argc, char *argv[]) {
 The deepest nesting is 2 levels
 
 
-  1 #! /bin/bash
+   1 #! /bin/bash
   2
   3 if [ $# -ne 1 ]; then
-  4     echo "There must be eactly one argument." >&2
+  4     echo "There must be exactly one argument" >&2
   5     exit 1
   6 fi
   7
   8 if [ ! -f "$1" ]; then
-  9     echo "the given parameter is not a file. " >&2
+  9     echo "The argument must be a valid c file" >&2
  10     exit 2
  11 fi
  12
  13 current=0
- 14
- 15 IFS=" "
+ 14 max=0
+ 15
  16 while read -n 1 symbol; do
  17     if [ "${symbol}" = "{" ]; then
- 18         current=$((${current} + 1))
- 19     fi
- 20 done < "$1"
- 21
- 22 echo "The deepest nesting level is ${current} levels"
+ 18
+ 19         current=$(("${current}" + 1))
+ 20         if [ "${current}" -gt "${max}" ]; then
+ 21             max="${current}"
+ 22         fi
+ 23
+ 24     elif [ "${symbol}" = "}" ]; then
+ 25         current=$(("${current}" - 1))
+ 26     fi
+ 27 done < "$1"
+ 28
+ 29 echo "The deepest nestring is ${max} levels"
+ 
 
 05-b-4300.txt
 Напишете shell script, който по подаден като аргумент файл с map между <nickname> -> <реален username> и nickname, ще ви улесни да изпращате съобщения на хората.
@@ -181,21 +213,26 @@ The deepest nesting is 2 levels
   1 #! /bin/bash
   2
   3 if [ $# -ne 2 ]; then
-  4     echo "There must be exactly two parameter." >&2
+  4     echo "There must be exactly two argument" >&2
   5     exit 1
   6 fi
   7
   8 if [ ! -f "$1" ]; then
-  9     echo "The given file does not exits." >&2
+  9     echo "The argument should be a file" >&2
  10     exit 2
  11 fi
  12
- 13 if [ "$(egrep "^"$2 "" "$1") | wc -l" -ne 1 ]; then
- 14     echo"The user name must exists exactly once in the file." >&2
+ 13 if [ -z "$2" ]; then
+ 14     echo "The nickname cannot be empty string" >&2
  15     exit 3
  16 fi
  17
- 18 write "$(egrep "^"$2 "" "$1" | egrep -o "[^ ]+$")"
+ 18 if [ "$(egrep "^$2 -> " "$1" | wc -l)" -ne 1 ]; then
+ 19     echo "The nickname must be unique" >&2
+ 20     exit 4
+ 21 fi
+ 22
+ 23 echo "$(egrep "^$2 " "$1" | egrep -o "[^ ]+$")"
 
 
 05-b-4301.txt
@@ -230,6 +267,36 @@ uncleBen <username на Ben Dover в os-server>
  15
  16 read -p "Your choice: " answer
  17 head -n "${answer}" /etc/passwd" | tail -n 1 | awk -F ":" -v user="$3" '{ print user,$1 }    ' > "$1"
+
+ \\a\\
+  1 #! /bin/bash
+  2
+  3 if [ $# -ne 3 ]; then
+  4     echo "There must be exactly three argument" >&2
+  5     exit 1
+  6 fi
+  7
+  8 if [ ! -f "$1" ]; then
+  9     echo "The argument should be a file" >&2
+ 10     exit 2
+ 11 fi
+ 12
+ 13 if [ -z "$2" ]; then
+ 14     echo "The name cannot be an empty string" >&2
+ 15     exit 3
+ 16 fi
+ 17
+ 18 if [ -z "$3" ]; then
+ 19     echo "The nickname cannot be an empty string" >&2
+ 20     exit 4
+ 21 fi
+ 22
+ 23 if [ "$(grep "$2" /etc/passwd | wc -l)" -lt 1 ]; then
+ 24     echo "There name of the user must be valid" >&2
+ 25     exit 5
+ 26 fi
+ 27
+ 28 echo "$3 -> $(egrep "$2" /etc/passwd | cut -d ":" -f 1)" >> "$1"
 
 
 05-b-4400.txt
@@ -273,6 +340,42 @@ uncleBen <username на Ben Dover в os-server>
  36     echo "There has to be one or two arguments." >&2
  37     exit 1
  38 fi
+ 
+  1 #! /bin/bash
+  2
+  3 if [ $# -ne 1 ] && [ $# -ne 2 ]; then
+  4     echo "There must be one or two arguments" >&2
+  5     exit 1
+  6 fi
+  7
+  8 if [ ! -d $1 ]; then
+  9     echo "The first argument should be a valid dir name" >&2
+ 10     exit 2
+ 11 fi
+ 12
+ 13 dir="$2"
+ 14
+ 15 if [ $# -eq 1 ]; then
+ 16     dir="$(date '+%F')"
+ 17
+ 18     if ! mkdir "${dir}"; then
+ 19         echo "Unable to create dir ${dir}"
+ 20     fi
+ 21 else
+ 22     if [ ! -d "$2" ]; then
+ 23         echo "The second parameter should be a valid dir" >&2
+ 24         exit 5
+ 25     fi
+ 26 fi
+ 27
+ 28 find "$1" -maxdepth 1 -type f -mmin -45 | xargs -I {} cp {} "${dir}"
+ 29 tar -czf "${dir}.tar.xz" "${dir}"
+ 30
+ 31 if ! rm -rf "${dir}"; then
+ 32     echo "There was s problem deleting the date dir." >&2
+ 33     exit 4
+ 34 fi
+
 
 05-b-4500.txt
 Да се напише shell скрипт, който получава при стартиране като параметър в командния ред идентификатор на потребител. Скриптът периодично (sleep(1)) да проверява дали потребителят е log-нат, и ако да - да прекратява изпълнението си, извеждайки на стандартния изход подходящо съобщение.
@@ -287,7 +390,7 @@ NB! Можете да тествате по същият начин като в 
   6 fi
   7
   8 while [ "$(who | egrep "^$1" | wc -l)" -lt 1 ]; do
-  9     echo "The selecte user has not logged in."
+  9     echo "The selected user has not logged in."
  10     sleep 3
  11 done
  12
@@ -341,6 +444,26 @@ fi
 
 echo "The number is in the boundries."
 
+ 1 #! /bin/bash
+  2
+  3 if [ $# -ne 3 ]; then
+  4     echo "There must be exactly 3 arguments" >&2
+  5     exit 1
+  6 fi
+  7
+  8 numberPattern="^-?[0-9]+$"
+  9 if [[ ! ("$1" =~ "${numberPattern}" && "$2" =~ "${nubmerPattern}" && "$3" =~ "${numberPattern}") ]]; then
+ 10     exit 3
+ 11 fi
+ 12
+ 13 if [ "$2" -ge "$3" ]; then
+ 14     exit 2
+ 15 fi
+ 16
+ 17 if [ "$1" -le "$2" ] || [ "$1" -ge "$3" ]; then
+ 18     exit 1
+ 19 fi
+
 
 05-b-4700.txt
 Да се напише shell скрипт, който форматира големи числа, за да са по-лесни за четене.
@@ -379,29 +502,28 @@ $ ./nicenumber.sh 7632223 ,
 
 NB! Под 'копие' разбираме файл със същото съдържание.
 
-
-  1 #! /bin/bash
+ 1 #! /bin/bash
   2
   3 if [ $# -ne 2 ]; then
-  4     echo "There must be exactly two parameters." >&2
+  4     echo "There must be exactly two parameters" >&2
   5     exit 1
   6 fi
   7
   8 if [ ! -f "$1" ]; then
-  9     echo "The first argument is not an existing file." >&2
+  9     echo "The first parameter should be a valid fail" >&2
  10     exit 2
  11 fi
  12
  13 if [ ! -d "$2" ]; then
- 14     echo "The second argument is not an existing directory." >&2
- 15     exit 2
+ 14     echo "The third parameter should be a valid directory" >&2
+ 15     exit 3
  16 fi
  17
- 18 find "$2" -type f | while read filename; do
- 19     if cmp "$filename" "$1"; then
- 20         echo "$filename"
- 21     fi
- 22 done
+ 18 inode=$(stat -c "%i" "$1")
+ 19
+ 20 echo "${inode}"
+ 21
+ 22 find "$2" -type f -printf "%i\t%f\n" | grep "^${inode}" | cut -f 2
 
 
 05-b-5500.txt
@@ -434,28 +556,34 @@ $ cat table.html
   </tr>
 </table>
 
-#! /bin/bash
+  1 #! /bin/bash
+  2
+  3 if [ $# -ne 1 ]; then
+  4     echo "There must be exactly one parameter" >&2
+  5     exit 1
+  6 fi
+  7
+  8 echo "<table>
+  9     <tr>
+ 10         <th>Username</th>
+ 11         <th>group</th>
+ 12         <th>login shell</th>
+ 13         <th>GECKO</th>
+ 14     </tr>"> "$1"
+ 15
+ 16 while read line; do
+ 17     awk -F ":" '{
+ 18         print "    <tr>";
+ 19         print "        <td>"$1"</td>";
+ 20         print "        <td>"$3"</td>";
+ 21         print "        <td>"$7"</td>";
+ 22         print "        <td>"$5"</td>";
+ 23         print "    </tr>";
+ 24     }' >> "$1"
+ 25 done < /etc/passwd
+ 26
+ 27 echo "</table>" > "$1"
 
-echo "<table>
-    <tr>
-        <th>Username</th>
-        <th>group</th>
-        <th>login shell</th>
-        <th>GECKO</th>
-    </tr>"
-
-while read line; do
-    awk -F ":" '{
-        print "    <tr>";
-        print "        <td>"$1"</td>";
-        print "        <td>"$4"</td>";
-        print "        <td>"$7"</td>";
-        print "        <td>"$5"</td>";
-        print "    </tr>";
-    }' <<< "$line"
-done < /etc/passwd
-
-echo "</table>"
 
 05-b-6600.txt
 Да се напише shell скрипт, който получава единствен аргумент директория и изтрива всички повтарящи се (по съдържание) файлове в дадената директория. Когато има няколко еднакви файла, да се остави само този, чието име е лексикографски преди имената на останалите дублирани файлове.
@@ -497,6 +625,23 @@ while read file1; do
     done <<< "$files"
 done <<< "$files"
 
+  1 #! /bin/bash
+  2
+  3 if [ $# -ne 1 ]; then
+  4     echo "There must be exactly one argument" >&2
+  5     exit 1
+  6 fi
+  7
+  8 if [ ! -d "$1" ]; then
+  9     echo "The argument must be an existing directory" >&2
+ 10     exit 2
+ 11 fi
+ 12
+ 13 duplicated=$(find "$1" -type f -printf "%i\n" | sort -n -k 1,1 | uniq -d)
+ 14
+ 15 while read line; do
+ 16     find "$1" -inum "${line}" -printf "%f\t%p\n" | sort -k 1,1 | cut -f 2 | tail -n +2 | xargs rm
+ 17 done <<< "${duplicated}"
 
 05-b-6800.txt
 Да се напише shell скрипт, който получава единствен аргумент директория и отпечатва списък с всички файлове и директории в нея (без скритите).
@@ -543,6 +688,30 @@ scripts (10 entries)
  27     fi
  28 done
 
+  1 #! /bin/bash
+  2
+  3 if [ $# -ne 1 ]; then
+  4     echo "There must be exactly one ergument" >&2
+  5     exit 1
+  6 fi
+  7
+  8 if [ ! -d "$1" ]; then
+  9     echo "The argument should be a directory" >&2
+ 10     exit 2
+ 11 fi
+ 12
+ 13 filesWithContent=$(find "$1" -not -path "*/.*" -type f -printf "%f\t(%s bytes)\n")
+ 14
+ 15 dirs=$( find . -not -path "*/.*" -type d -printf "%p\n")
+ 16
+ 17 while read line; do
+ 18     content=$(find "${line}" -not -path "*/.*" -type f -o -type d | wc -l)
+ 19     dirsWithContent="${line}""  ""(${content} entries)"
+ 20 done <<< "${dirs}"
+ 21
+ 22 echo "${filesWithContent}"
+ 23 echo "${dirsWithContent}"
+ 
 
 05-b-7000.txt
 Да се напише shell скрипт, който приема произволен брой аргументи - имена на файлове. Скриптът да прочита от стандартния вход символен низ и за всеки от зададените файлове извежда по подходящ начин на стандартния изход броя на редовете, които съдържат низа.
