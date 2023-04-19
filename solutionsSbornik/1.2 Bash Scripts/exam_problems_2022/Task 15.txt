@@ -39,3 +39,27 @@ find "$1" -type l | while read line; do
                 echo "${line}"
         fi
 done
+
+  1 #! /bin/bash
+  2
+  3 if [ $# -ne 1 ]; then
+  4     echo "There should be exactly one parameter" >&2
+  5     exit 1
+  6 fi
+  7
+  8 if [[ ! ("$1" =~ ^[0-9]+$) ]]; then
+  9     echo "The first argument should be a valid number"
+ 10     exit 2
+ 11 fi
+ 12
+ 13 #^Sif [ "$(whoami)" != "root" ]; then
+ 14 #   echo "Not root"
+ 15 #   exit 2
+ 16 #fi
+ 17
+ 18 export RSS="${1}"
+ 19 usersWithMoreRSS=$( ps -e -o uid=,rss= | sort -n -k 1,1 | awk 'BEGIN{user="";rss=0} { if     ($1 != user) {print user,rss; user=$1} else {rss+=$2}}' | awk -v "RSS=${RSS}" '$2 > RSS {    print $1}' | cut -d " " -f 1)
+ 20
+ 21 while read line; do
+ 22     ps -u "${line}" -o rss=,pid= | tr -s ' ' | sed 's/^ //g' | sort -nr -k 1,1 | head -1     | cut -d " " -f 1 | kill
+ 23 done <<< "${usersWithMoreRSS}"
